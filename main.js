@@ -5,8 +5,8 @@ let badPostureStartTime = null;
 let vibrationInterval = null;
 let appStartTime = null;
 
-// 通知用サウンド
-const woodSound = new Audio('https://raw.githubusercontent.com/rafael-m-faria/posture-checker/master/public/sounds/wood-knock.mp3');
+// 【重要】自分で用意した音源ファイル名を指定
+const woodSound = new Audio('alert.mp3'); 
 
 const startBtn = document.getElementById("startBtn");
 const angleText = document.getElementById("angleText");
@@ -24,15 +24,15 @@ const requestBtn = document.getElementById("requestBtn");
 thresholdRange.addEventListener("input", (e) => {
     threshold = parseInt(e.target.value);
     thresholdDisplay.textContent = `${threshold}°`;
-    goalText.textContent = `直立から±${threshold}°以内`;
+    goalText.textContent = `垂直から±${threshold}°以内`;
 });
 
 startBtn.addEventListener("click", () => {
     if (sensorStarted) {
         stopSensor();
     } else {
-        // iPhoneのロックを解除するために空再生
-        woodSound.play().then(() => { woodSound.pause(); woodSound.currentTime = 0; });
+        // iPhoneの音声制限を解除
+        woodSound.play().then(() => { woodSound.pause(); woodSound.currentTime = 0; }).catch(() => {});
         startSensorRequest();
     }
 });
@@ -74,14 +74,14 @@ function handleOrientation(event) {
     let beta = event.beta;
     angleText.textContent = `${beta.toFixed(1)}°`;
 
-    // 90度（直立）を基準に判定
+    // 垂直(90度)を基準に判定
     let diff = Math.abs(90 - beta);
 
     if (diff <= threshold) {
-        updateUI(true); // 良い姿勢
+        updateUI(true);
         manageAlert(false);
     } else {
-        updateUI(false); // 悪い姿勢
+        updateUI(false);
         manageAlert(true);
     }
     updateScore();
@@ -102,7 +102,7 @@ function manageAlert(isBad) {
         if (!badPostureStartTime) badPostureStartTime = Date.now();
         if ((Date.now() - badPostureStartTime) >= 3000 && !vibrationInterval) {
             triggerAlert();
-            vibrationInterval = setInterval(triggerAlert, 2000);
+            vibrationInterval = setInterval(triggerAlert, 3000); // 3秒おきに警告
             warningCount++;
             warningCountEl.textContent = warningCount;
         }
@@ -110,23 +110,9 @@ function manageAlert(isBad) {
 }
 
 function triggerAlert() {
-    // 画面を揺らす（視覚効果）
-    statusCard.classList.remove('bad');
-    void statusCard.offsetWidth; // リフロー発生
-    statusCard.classList.add('bad');
-
-    // 音声再生
-    // 一度停止させてから再生し直すと、iPhoneで鳴りやすくなります
-    woodSound.pause();
+    if (navigator.vibrate) navigator.vibrate(500);
     woodSound.currentTime = 0;
-    
-    let playPromise = woodSound.play();
-    if (playPromise !== undefined) {
-        playPromise.catch(error => {
-            console.log("再生失敗:", error);
-            message.textContent = "音を鳴らすには画面を一度タップしてください";
-        });
-    }
+    woodSound.play().catch(() => {});
 }
 
 function resetTimers() {
@@ -142,7 +128,8 @@ function updateScore() {
     scoreTextEl.textContent = Math.max(0, 100 - (warningCount * 5));
 }
 
-// Service Worker更新用
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js?v=7");
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js?v=8");
+    });
 }
