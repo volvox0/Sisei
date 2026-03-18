@@ -1,13 +1,12 @@
-let threshold = 15; // 垂直(90°)からの許容誤差 [cite: 1]
+let threshold = 15; 
 let warningCount = 0;
 let sensorStarted = false;
 let badPostureStartTime = null;
 let vibrationInterval = null;
 let appStartTime = null;
 
-// 通知用サウンド（より確実に鳴るパブリックな音源）
-const woodSound = new Audio('https://raw.githubusercontent.com/the-maldridge/open-asset-library/master/audio/sfx/wood_knock.mp3');
-woodSound.load();
+// 通知用サウンド
+const woodSound = new Audio('https://raw.githubusercontent.com/rafael-m-faria/posture-checker/master/public/sounds/wood-knock.mp3');
 
 const startBtn = document.getElementById("startBtn");
 const angleText = document.getElementById("angleText");
@@ -25,19 +24,15 @@ const requestBtn = document.getElementById("requestBtn");
 thresholdRange.addEventListener("input", (e) => {
     threshold = parseInt(e.target.value);
     thresholdDisplay.textContent = `${threshold}°`;
-    goalText.textContent = `垂直から${threshold.toFixed(1)}° 以内`;
+    goalText.textContent = `直立から±${threshold}°以内`;
 });
 
 startBtn.addEventListener("click", () => {
     if (sensorStarted) {
         stopSensor();
     } else {
-        // iPhoneのブラウザ制限を解除するために音を一瞬鳴らす
-        woodSound.play().then(() => {
-            woodSound.pause();
-            woodSound.currentTime = 0;
-        }).catch(e => console.log("Audio unlock failed:", e));
-        
+        // iPhoneのロックを解除するために空再生
+        woodSound.play().then(() => { woodSound.pause(); woodSound.currentTime = 0; });
         startSensorRequest();
     }
 });
@@ -46,17 +41,13 @@ async function startSensorRequest() {
     if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
         permissionOverlay.style.display = "flex";
         requestBtn.onclick = async () => {
-            try {
-                const permission = await DeviceOrientationEvent.requestPermission();
-                if (permission === "granted") {
-                    permissionOverlay.style.display = "none";
-                    initSensor();
-                }
-            } catch (e) { message.textContent = "センサー許可に失敗しました"; }
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission === "granted") {
+                permissionOverlay.style.display = "none";
+                initSensor();
+            }
         };
-    } else {
-        initSensor();
-    }
+    } else { initSensor(); }
 }
 
 function initSensor() {
@@ -80,18 +71,17 @@ function stopSensor() {
 
 function handleOrientation(event) {
     if (event.beta === null) return;
-    
     let beta = event.beta;
     angleText.textContent = `${beta.toFixed(1)}°`;
 
-    // 90度（垂直）を基準にしたズレを計算
-    let diff = Math.abs( 145- beta);
+    // 90度（直立）を基準に判定
+    let diff = Math.abs(90 - beta);
 
     if (diff <= threshold) {
         updateUI(true); // 良い姿勢
         manageAlert(false);
     } else {
-        updateUI(false); // 悪い姿勢 [cite: 1]
+        updateUI(false); // 悪い姿勢
         manageAlert(true);
     }
     updateScore();
@@ -110,28 +100,19 @@ function updateUI(isGood) {
 function manageAlert(isBad) {
     if (isBad) {
         if (!badPostureStartTime) badPostureStartTime = Date.now();
-        let duration = Date.now() - badPostureStartTime;
-        
-        // 3秒継続で警告 
-        if (duration >= 3000 && !vibrationInterval) {
+        if ((Date.now() - badPostureStartTime) >= 3000 && !vibrationInterval) {
             triggerAlert();
-            vibrationInterval = setInterval(triggerAlert, 2000); 
+            vibrationInterval = setInterval(triggerAlert, 2000);
             warningCount++;
             warningCountEl.textContent = warningCount;
         }
-    } else {
-        resetTimers();
-    }
+    } else { resetTimers(); }
 }
 
 function triggerAlert() {
-    // 振動 (Androidのみ対応。iPhoneは動作しません) 
-    if (navigator.vibrate) {
-        navigator.vibrate(500); 
-    }
-    // 音声再生
+    if (navigator.vibrate) navigator.vibrate(500);
     woodSound.currentTime = 0;
-    woodSound.play().catch(e => console.log("Sound play error:", e));
+    woodSound.play().catch(() => {});
 }
 
 function resetTimers() {
@@ -144,12 +125,10 @@ function resetTimers() {
 
 function updateScore() {
     if (!appStartTime) return;
-    let score = 100 - (warningCount * 5);
-    scoreTextEl.textContent = Math.max(0, score);
+    scoreTextEl.textContent = Math.max(0, 100 - (warningCount * 5));
 }
 
+// Service Worker更新用
 if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js");
-    });
+    navigator.serviceWorker.register("service-worker.js?v=7");
 }
