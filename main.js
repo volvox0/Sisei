@@ -110,9 +110,23 @@ function manageAlert(isBad) {
 }
 
 function triggerAlert() {
-    if (navigator.vibrate) navigator.vibrate(500);
+    // 画面を揺らす（視覚効果）
+    statusCard.classList.remove('bad');
+    void statusCard.offsetWidth; // リフロー発生
+    statusCard.classList.add('bad');
+
+    // 音声再生
+    // 一度停止させてから再生し直すと、iPhoneで鳴りやすくなります
+    woodSound.pause();
     woodSound.currentTime = 0;
-    woodSound.play().catch(() => {});
+    
+    let playPromise = woodSound.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            console.log("再生失敗:", error);
+            message.textContent = "音を鳴らすには画面を一度タップしてください";
+        });
+    }
 }
 
 function resetTimers() {
