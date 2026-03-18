@@ -1,13 +1,13 @@
-let threshold = 15; // 垂直(90°)からの許容誤差
+let threshold = 15; 
 let warningCount = 0;
 let sensorStarted = false;
 let badPostureStartTime = null;
 let vibrationInterval = null;
 let appStartTime = null;
 
-// 通知用サウンド（より確実に鳴るパブリックな音源に変更）
-const woodSound = new Audio('https://raw.githubusercontent.com/the-maldridge/open-asset-library/master/audio/sfx/wood_knock.mp3');
-woodSound.load(); // 事前読み込み
+// 通知用サウンド（より信頼性の高いURLに変更）
+const woodSound = new Audio('https://raw.githubusercontent.com/rafael-m-faria/posture-checker/master/public/sounds/wood-knock.mp3');
+woodSound.preload = 'auto';
 
 const startBtn = document.getElementById("startBtn");
 const angleText = document.getElementById("angleText");
@@ -22,7 +22,6 @@ const scoreTextEl = document.getElementById("scoreText");
 const permissionOverlay = document.getElementById("permissionOverlay");
 const requestBtn = document.getElementById("requestBtn");
 
-// 許容角度の設定
 thresholdRange.addEventListener("input", (e) => {
     threshold = parseInt(e.target.value);
     thresholdDisplay.textContent = `${threshold}°`;
@@ -33,17 +32,17 @@ startBtn.addEventListener("click", () => {
     if (sensorStarted) {
         stopSensor();
     } else {
+        // 【重要】ボタンクリックと同時に音声を有効化
+        woodSound.play().then(() => {
+            woodSound.pause();
+            woodSound.currentTime = 0;
+        }).catch(e => console.log("Audio unlock failed:", e));
+        
         startSensorRequest();
     }
 });
 
 async function startSensorRequest() {
-    // ボタンクリックの瞬間に音声を「アンロック」する（重要！）
-    woodSound.play().then(() => {
-        woodSound.pause();
-        woodSound.currentTime = 0;
-    }).catch(e => console.log("Audio unlock failed:", e));
-
     if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
         permissionOverlay.style.display = "flex";
         requestBtn.onclick = async () => {
@@ -53,7 +52,7 @@ async function startSensorRequest() {
                     permissionOverlay.style.display = "none";
                     initSensor();
                 }
-            } catch (e) { message.textContent = "エラーが発生しました"; }
+            } catch (e) { message.textContent = "センサー許可に失敗しました"; }
         };
     } else {
         initSensor();
@@ -82,19 +81,17 @@ function stopSensor() {
 function handleOrientation(event) {
     if (event.beta === null) return;
     
-    // beta: 0(水平) 〜 90(垂直)
     let beta = event.beta;
     angleText.textContent = `${beta.toFixed(1)}°`;
 
-    // 90度（直立）を基準としたズレを計算
+    // 90度（垂直）を基準にしたズレ
     let diff = Math.abs(90 - beta);
 
-    // 判定ロジック：ズレがしきい値以内なら「良い」 
     if (diff <= threshold) {
-        updateUI(true);  // 良い姿勢
+        updateUI(true);
         manageAlert(false);
     } else {
-        updateUI(false); // 姿勢が悪い
+        updateUI(false);
         manageAlert(true);
     }
     updateScore();
@@ -115,7 +112,6 @@ function manageAlert(isBad) {
         if (!badPostureStartTime) badPostureStartTime = Date.now();
         let duration = Date.now() - badPostureStartTime;
         
-        // 3秒継続で警告 
         if (duration >= 3000 && !vibrationInterval) {
             triggerAlert();
             vibrationInterval = setInterval(triggerAlert, 2000); 
@@ -128,13 +124,16 @@ function manageAlert(isBad) {
 }
 
 function triggerAlert() {
-    // 振動 
+    // 振動 (Androidのみ動作) 
     if (navigator.vibrate) {
         navigator.vibrate(500);
     }
     // 音声再生
     woodSound.currentTime = 0;
-    woodSound.play().catch(e => console.log("Sound play error:", e));
+    woodSound.play().catch(e => {
+        console.log("Play error:", e);
+        message.textContent = "音声再生に失敗しました";
+    });
 }
 
 function resetTimers() {
@@ -151,7 +150,6 @@ function updateScore() {
     scoreTextEl.textContent = Math.max(0, score);
 }
 
-// Service WorkerのパスをGitHub Pages用に修正
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
         navigator.serviceWorker.register("service-worker.js");
