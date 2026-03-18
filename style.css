@@ -8,7 +8,6 @@
     --transition: all 0.4s ease;
 }
 
-/* ダークモード対応 [cite: 1] */
 @media (prefers-color-scheme: dark) {
     :root {
         --wood-dark: #FAF0E6;
@@ -24,15 +23,13 @@ body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
     color: var(--wood-dark);
     min-height: 100vh;
-    overflow-x: hidden;
-    /* 背景パララックス設定 */
-    background-image: url('../Image image_4.png');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
     display: flex;
     justify-content: center;
     align-items: center;
+    background-image: url('background.png'); /* 直下のファイルを参照 */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     transition: var(--transition);
 }
 
@@ -44,7 +41,7 @@ body {
 }
 
 .app-container {
-    width: 90%;
+    width: 95%;
     max-width: 420px;
     padding: 30px 20px;
     background: var(--card-bg);
@@ -54,12 +51,7 @@ body {
     text-align: center;
 }
 
-h1 {
-    font-family: 'Noto Serif JP', serif;
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-    letter-spacing: 0.1em;
-}
+h1 { font-family: 'Noto Serif JP', serif; font-size: 1.8rem; margin-bottom: 20px; }
 
 .status-card {
     background: white;
@@ -70,14 +62,9 @@ h1 {
     border: 4px solid transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-    .status-card { background: #3d2b1a; color: #fff; }
-}
+@media (prefers-color-scheme: dark) { .status-card { background: #3d2b1a; color: #fff; } }
 
-.icon-wrapper img {
-    width: 70px; height: 70px; margin-bottom: 10px;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
-}
+.icon-wrapper img { width: 70px; height: 70px; margin-bottom: 10px; }
 
 .status-card.good { border-color: var(--accent-good); background: #f0fff0; }
 .status-card.bad { border-color: var(--accent-bad); background: #fff5f5; animation: shake 0.5s ease; }
@@ -87,76 +74,33 @@ h1 {
     .status-card.bad { background: #2e1a1a; }
 }
 
-.dashboard {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.data-box {
-    background: rgba(255,255,255,0.5);
-    padding: 12px;
-    border-radius: 20px;
-}
-
-@media (prefers-color-scheme: dark) {
-    .data-box { background: rgba(0,0,0,0.2); }
-}
-
+.dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+.data-box { background: rgba(255,255,255,0.5); padding: 12px; border-radius: 20px; }
 .data-box span { font-size: 0.7rem; opacity: 0.7; display: block; }
 .data-box strong { font-size: 1.1rem; display: block; }
 
-.settings-area {
-    margin-bottom: 25px;
-    padding: 15px;
-    background: rgba(255,255,255,0.3);
-    border-radius: 20px;
-}
-
+.settings-area { margin-bottom: 25px; padding: 15px; background: rgba(255,255,255,0.3); border-radius: 20px; }
 .settings-label { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; }
 
 input[type=range] { width: 100%; accent-color: #4B3621; }
 
 .wood-button {
-    background: #4B3621;
-    color: #FAF0E6;
-    border: none;
-    padding: 18px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    width: 100%;
-    transition: var(--transition);
+    background: #4B3621; color: #FAF0E6; border: none; padding: 18px;
+    font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4); width: 100%; transition: var(--transition);
 }
 
 .wood-button.stop { background: #7c6244; }
-
 .request-btn { background: white !important; color: black !important; max-width: 300px; }
 
 #permissionOverlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    color: white;
-    padding: 30px;
-    text-align: center;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); display: none; flex-direction: column;
+    justify-content: center; align-items: center; z-index: 100; color: white; padding: 30px; text-align: center;
 }
 
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     20%, 60% { transform: translateX(-5px); }
     40%, 80% { transform: translateX(5px); }
-}
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
 }
