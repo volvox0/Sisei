@@ -1,12 +1,13 @@
-let threshold = 15; // 許容されるズレの角度
+let threshold = 15; // 垂直(90°)からの許容誤差
 let warningCount = 0;
 let sensorStarted = false;
 let badPostureStartTime = null;
 let vibrationInterval = null;
 let appStartTime = null;
 
-// 通知用サウンド（木のノック音）
-const woodSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+// 通知用サウンド（より確実に鳴るパブリックな音源に変更）
+const woodSound = new Audio('https://raw.githubusercontent.com/the-maldridge/open-asset-library/master/audio/sfx/wood_knock.mp3');
+woodSound.load(); // 事前読み込み
 
 const startBtn = document.getElementById("startBtn");
 const angleText = document.getElementById("angleText");
@@ -37,6 +38,12 @@ startBtn.addEventListener("click", () => {
 });
 
 async function startSensorRequest() {
+    // ボタンクリックの瞬間に音声を「アンロック」する（重要！）
+    woodSound.play().then(() => {
+        woodSound.pause();
+        woodSound.currentTime = 0;
+    }).catch(e => console.log("Audio unlock failed:", e));
+
     if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
         permissionOverlay.style.display = "flex";
         requestBtn.onclick = async () => {
@@ -60,12 +67,6 @@ function initSensor() {
     startBtn.textContent = "センサー停止";
     startBtn.classList.add("stop");
     message.textContent = "測定中...";
-    
-    // ブラウザの音声を有効化するための空再生
-    woodSound.play().then(() => {
-        woodSound.pause();
-        woodSound.currentTime = 0;
-    }).catch(() => {});
 }
 
 function stopSensor() {
@@ -75,8 +76,6 @@ function stopSensor() {
     startBtn.classList.remove("stop");
     statusText.textContent = "待機中";
     statusCard.className = "status-card";
-    angleText.textContent = "0.0°";
-    message.textContent = "計測を停止しました";
     resetTimers();
 }
 
@@ -87,15 +86,16 @@ function handleOrientation(event) {
     let beta = event.beta;
     angleText.textContent = `${beta.toFixed(1)}°`;
 
-    // 【修正】90度（直立）を基準としたズレを計算
+    // 90度（直立）を基準としたズレを計算
     let diff = Math.abs(90 - beta);
 
-    if (diff > threshold) {
+    // 判定ロジック：ズレがしきい値以内なら「良い」 
+    if (diff <= threshold) {
+        updateUI(true);  // 良い姿勢
+        manageAlert(false);
+    } else {
         updateUI(false); // 姿勢が悪い
         manageAlert(true);
-    } else {
-        updateUI(true);  // 姿勢が良い
-        manageAlert(false);
     }
     updateScore();
 }
@@ -115,9 +115,10 @@ function manageAlert(isBad) {
         if (!badPostureStartTime) badPostureStartTime = Date.now();
         let duration = Date.now() - badPostureStartTime;
         
+        // 3秒継続で警告 
         if (duration >= 3000 && !vibrationInterval) {
             triggerAlert();
-            vibrationInterval = setInterval(triggerAlert, 2000); // 2秒おきに通知
+            vibrationInterval = setInterval(triggerAlert, 2000); 
             warningCount++;
             warningCountEl.textContent = warningCount;
         }
@@ -127,11 +128,13 @@ function manageAlert(isBad) {
 }
 
 function triggerAlert() {
-    // 振動
-    if (navigator.vibrate) navigator.vibrate(500);
+    // 振動 
+    if (navigator.vibrate) {
+        navigator.vibrate(500);
+    }
     // 音声再生
     woodSound.currentTime = 0;
-    woodSound.play().catch(e => console.log("Audio play failed:", e));
+    woodSound.play().catch(e => console.log("Sound play error:", e));
 }
 
 function resetTimers() {
@@ -148,6 +151,7 @@ function updateScore() {
     scoreTextEl.textContent = Math.max(0, score);
 }
 
+// Service WorkerのパスをGitHub Pages用に修正
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
         navigator.serviceWorker.register("service-worker.js");
