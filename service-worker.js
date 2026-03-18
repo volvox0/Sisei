@@ -1,4 +1,4 @@
-const CACHE_NAME = "posture-app-v5";
+const CACHE_NAME = "posture-app-v6";
 const urlsToCache = [
   "/Sisei/",
   "/Sisei/index.html",
@@ -7,21 +7,17 @@ const urlsToCache = [
   "/Sisei/main.js",
   "/Sisei/icon-192.png",
   "/Sisei/icon-512.png",
-  "/Sisei/Image%20image_4.png"
+  "/Sisei/background.png"
 ];
-self.addEventListener("install", function(event){
+
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
 });
 
-self.addEventListener("fetch", function(event){
-  if(event.request.url.includes("/posture-app/")){
-    event.respondWith(
-      caches.match(event.request).then(response=>{
-        return response || fetch(event.request);
-      })
-    );
-  }
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => response || fetch(event.request))
+  );
 });
