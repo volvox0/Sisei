@@ -1,11 +1,11 @@
-let threshold = 15;
+let threshold = 15; // 許容されるズレの角度
 let warningCount = 0;
 let sensorStarted = false;
 let badPostureStartTime = null;
 let vibrationInterval = null;
 let appStartTime = null;
 
-// 通知用サウンド
+// 通知用サウンド（木のノック音）
 const woodSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
 
 const startBtn = document.getElementById("startBtn");
@@ -21,10 +21,11 @@ const scoreTextEl = document.getElementById("scoreText");
 const permissionOverlay = document.getElementById("permissionOverlay");
 const requestBtn = document.getElementById("requestBtn");
 
+// 許容角度の設定
 thresholdRange.addEventListener("input", (e) => {
     threshold = parseInt(e.target.value);
     thresholdDisplay.textContent = `${threshold}°`;
-    goalText.textContent = `${threshold.toFixed(1)}° 以内`;
+    goalText.textContent = `垂直から${threshold.toFixed(1)}° 以内`;
 });
 
 startBtn.addEventListener("click", () => {
@@ -59,7 +60,12 @@ function initSensor() {
     startBtn.textContent = "センサー停止";
     startBtn.classList.add("stop");
     message.textContent = "測定中...";
-    woodSound.play().then(() => woodSound.pause()); // 音声の初回アクティブ化
+    
+    // ブラウザの音声を有効化するための空再生
+    woodSound.play().then(() => {
+        woodSound.pause();
+        woodSound.currentTime = 0;
+    }).catch(() => {});
 }
 
 function stopSensor() {
@@ -76,14 +82,19 @@ function stopSensor() {
 
 function handleOrientation(event) {
     if (event.beta === null) return;
+    
+    // beta: 0(水平) 〜 90(垂直)
     let beta = event.beta;
     angleText.textContent = `${beta.toFixed(1)}°`;
 
-    if (Math.abs(beta) > threshold) {
-        updateUI(false);
+    // 【修正】90度（直立）を基準としたズレを計算
+    let diff = Math.abs(90 - beta);
+
+    if (diff > threshold) {
+        updateUI(false); // 姿勢が悪い
         manageAlert(true);
     } else {
-        updateUI(true);
+        updateUI(true);  // 姿勢が良い
         manageAlert(false);
     }
     updateScore();
@@ -103,18 +114,24 @@ function manageAlert(isBad) {
     if (isBad) {
         if (!badPostureStartTime) badPostureStartTime = Date.now();
         let duration = Date.now() - badPostureStartTime;
+        
         if (duration >= 3000 && !vibrationInterval) {
             triggerAlert();
-            vibrationInterval = setInterval(triggerAlert, 2000);
+            vibrationInterval = setInterval(triggerAlert, 2000); // 2秒おきに通知
             warningCount++;
             warningCountEl.textContent = warningCount;
         }
-    } else { resetTimers(); }
+    } else {
+        resetTimers();
+    }
 }
 
 function triggerAlert() {
+    // 振動
     if (navigator.vibrate) navigator.vibrate(500);
-    woodSound.play().catch(() => {});
+    // 音声再生
+    woodSound.currentTime = 0;
+    woodSound.play().catch(e => console.log("Audio play failed:", e));
 }
 
 function resetTimers() {
