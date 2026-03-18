@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>姿勢チェックアプリ</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="background-overlay"></div>
+
+    <main class="app-container">
+        <header>
+            <h1>姿勢チェック</h1>
+        </header>
+
+        <section class="status-card" id="statusCard">
+            <div class="icon-wrapper">
+                <img src="icon-512.png" alt="App Icon" id="appIcon">
+            </div>
+            <div class="status-info">
+                <p class="status-label">状態</p>
+                <h2 id="statusText">待機中</h2>
+            </div>
+        </section>
+
+        <section class="data-area">
+            <div class="data-item">
+                <span>現在の角度</span>
+                <strong id="angleText">0.0°</strong>
+            </div>
+            <div class="data-item">
+                <span>目標値</span>
+                <strong>15.0° 以内</strong>
+            </div>
+        </section>
+
+        <footer class="controls">
+            <button id="startBtn" class="wood-button">センサー開始</button>
+            <p id="message" class="info-msg"></p>
+        </footer>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

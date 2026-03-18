@@ -1,0 +1,101 @@
+:root {
+    --wood-dark: #4B3621;
+    --wood-light: #FAF0E6;
+    --accent-good: #8FBC8F;
+    --accent-bad: #CD5C5C;
+    --transition: all 0.4s ease;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    color: var(--wood-dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+    /* 背景を固定してパララックス効果を演出 */
+    background-image: url('../image_4.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 画面に少し深みを持たせるオーバーレイ */
+.background-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(75, 54, 33, 0.15);
+    z-index: -1;
+}
+
+.app-container {
+    width: 90%;
+    max-width: 400px;
+    padding: 30px 20px;
+    background: rgba(250, 240, 230, 0.85); /* 半透明のウッドライト */
+    backdrop-filter: blur(10px); /* グラスモーフィズム風の高級感 */
+    border-radius: 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    text-align: center;
+}
+
+h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    letter-spacing: 0.1em;
+}
+
+.status-card {
+    background: white;
+    padding: 30px;
+    border-radius: 30px;
+    margin-bottom: 25px;
+    transition: var(--transition);
+    border: 3px solid transparent;
+}
+
+.icon-wrapper img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+
+#statusText { font-size: 1.5rem; margin-top: 5px; }
+
+/* 状態変化時のスタイル */
+.status-card.good { border-color: var(--accent-good); background: #f0fff0; }
+.status-card.bad { border-color: var(--accent-bad); background: #fff5f5; animation: shake 0.5s ease; }
+
+.data-area {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+}
+
+.data-item span { font-size: 0.8rem; display: block; opacity: 0.7; }
+.data-item strong { font-size: 1.2rem; }
+
+.wood-button {
+    background: var(--wood-dark);
+    color: var(--wood-light);
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    transition: var(--transition);
+}
+
+.wood-button:active { transform: scale(0.95); }
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
