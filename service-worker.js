@@ -1,4 +1,4 @@
-const CACHE_NAME = "posture-app-v6";
+const CACHE_NAME = "posture-app-v7"; // バージョンアップ
 const urlsToCache = [
   "/Sisei/",
   "/Sisei/index.html",
