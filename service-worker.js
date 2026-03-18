@@ -1,13 +1,13 @@
-﻿const CACHE_NAME = "posture-app-v4"; // バージョンを上げる
+const CACHE_NAME = "posture-app-v5";
 const urlsToCache = [
-  "/posture-app/",
-  "/posture-app/index.html",
-  "/posture-app/manifest.json",
-  "/posture-app/css/style.css",    // 追加
-  "/posture-app/js/main.js",       // 追加
-  "/posture-app/icon-192.png",
-  "/posture-app/icon-512.png",
-  "/posture-app/image_4.png"       // 背景画像もキャッシュ
+  "/Sisei/",
+  "/Sisei/index.html",
+  "/Sisei/manifest.json",
+  "/Sisei/style.css",
+  "/Sisei/main.js",
+  "/Sisei/icon-192.png",
+  "/Sisei/icon-512.png",
+  "/Sisei/Image%20image_4.png"
 ];
 self.addEventListener("install", function(event){
   event.waitUntil(
