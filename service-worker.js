@@ -1,4 +1,4 @@
-const CACHE_NAME = "posture-app-v7"; // バージョンアップ
+const CACHE_NAME = "posture-app-v8"; // バージョンアップ
 const urlsToCache = [
   "/Sisei/",
   "/Sisei/index.html",
@@ -7,7 +7,8 @@ const urlsToCache = [
   "/Sisei/main.js",
   "/Sisei/icon-192.png",
   "/Sisei/icon-512.png",
-  "/Sisei/background.png"
+  "/Sisei/background.png",
+  "/Sisei/alert.mp3" // 音源を追加
 ];
 
 self.addEventListener("install", (event) => {
