@@ -85,7 +85,7 @@ function handleOrientation(event) {
     angleText.textContent = `${beta.toFixed(1)}°`;
 
     // 90度（垂直）を基準にしたズレを計算
-    let diff = Math.abs(90 - beta);
+    let diff = Math.abs( 145- beta);
 
     if (diff <= threshold) {
         updateUI(true); // 良い姿勢
