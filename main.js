@@ -1,10 +1,12 @@
-// State Management
-let threshold = 15; // [cite: 1]
-let warningCount = 0; // [cite: 1]
+let threshold = 15;
+let warningCount = 0;
 let sensorStarted = false;
 let badPostureStartTime = null;
 let vibrationInterval = null;
 let appStartTime = null;
+
+// 通知用サウンド
+const woodSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
 
 const startBtn = document.getElementById("startBtn");
 const angleText = document.getElementById("angleText");
@@ -19,7 +21,6 @@ const scoreTextEl = document.getElementById("scoreText");
 const permissionOverlay = document.getElementById("permissionOverlay");
 const requestBtn = document.getElementById("requestBtn");
 
-// 許容角度の調整 [cite: 1]
 thresholdRange.addEventListener("input", (e) => {
     threshold = parseInt(e.target.value);
     thresholdDisplay.textContent = `${threshold}°`;
@@ -35,7 +36,6 @@ startBtn.addEventListener("click", () => {
 });
 
 async function startSensorRequest() {
-    // iOS Permission Check
     if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
         permissionOverlay.style.display = "flex";
         requestBtn.onclick = async () => {
@@ -44,12 +44,8 @@ async function startSensorRequest() {
                 if (permission === "granted") {
                     permissionOverlay.style.display = "none";
                     initSensor();
-                } else {
-                    message.textContent = "センサー許可が拒否されました";
                 }
-            } catch (e) {
-                message.textContent = "エラーが発生しました";
-            }
+            } catch (e) { message.textContent = "エラーが発生しました"; }
         };
     } else {
         initSensor();
@@ -57,12 +53,13 @@ async function startSensorRequest() {
 }
 
 function initSensor() {
-    window.addEventListener("deviceorientation", handleOrientation); // [cite: 1]
+    window.addEventListener("deviceorientation", handleOrientation);
     sensorStarted = true;
     appStartTime = Date.now();
     startBtn.textContent = "センサー停止";
     startBtn.classList.add("stop");
     message.textContent = "測定中...";
+    woodSound.play().then(() => woodSound.pause()); // 音声の初回アクティブ化
 }
 
 function stopSensor() {
@@ -79,17 +76,15 @@ function stopSensor() {
 
 function handleOrientation(event) {
     if (event.beta === null) return;
-
     let beta = event.beta;
     angleText.textContent = `${beta.toFixed(1)}°`;
 
-    // 姿勢判定 [cite: 1]
     if (Math.abs(beta) > threshold) {
         updateUI(false);
-        manageVibration(true);
+        manageAlert(true);
     } else {
         updateUI(true);
-        manageVibration(false);
+        manageAlert(false);
     }
     updateScore();
 }
@@ -104,28 +99,22 @@ function updateUI(isGood) {
     }
 }
 
-function manageVibration(isBad) {
+function manageAlert(isBad) {
     if (isBad) {
         if (!badPostureStartTime) badPostureStartTime = Date.now();
         let duration = Date.now() - badPostureStartTime;
-        
-        // 3秒継続判定 [cite: 1]
-        if (duration >= 3000) {
-            if (!vibrationInterval) {
-                doVibrate();
-                // 2秒おきに連続振動 [cite: 1]
-                vibrationInterval = setInterval(doVibrate, 2000);
-                warningCount++; // 警告回数カウント [cite: 1]
-                warningCountEl.textContent = warningCount;
-            }
+        if (duration >= 3000 && !vibrationInterval) {
+            triggerAlert();
+            vibrationInterval = setInterval(triggerAlert, 2000);
+            warningCount++;
+            warningCountEl.textContent = warningCount;
         }
-    } else {
-        resetTimers();
-    }
+    } else { resetTimers(); }
 }
 
-function doVibrate() {
-    if (navigator.vibrate) navigator.vibrate(500); // [cite: 1, 2]
+function triggerAlert() {
+    if (navigator.vibrate) navigator.vibrate(500);
+    woodSound.play().catch(() => {});
 }
 
 function resetTimers() {
@@ -138,12 +127,10 @@ function resetTimers() {
 
 function updateScore() {
     if (!appStartTime) return;
-    // 簡易的なスコアロジック: 100点から減点 [cite: 1]
     let score = 100 - (warningCount * 5);
     scoreTextEl.textContent = Math.max(0, score);
 }
 
-// Service Worker登録 [cite: 1]
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
         navigator.serviceWorker.register("service-worker.js");
