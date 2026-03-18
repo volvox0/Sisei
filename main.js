@@ -1,13 +1,13 @@
-let threshold = 15; 
+let threshold = 15; // 垂直(90°)からの許容誤差 [cite: 1]
 let warningCount = 0;
 let sensorStarted = false;
 let badPostureStartTime = null;
 let vibrationInterval = null;
 let appStartTime = null;
 
-// 通知用サウンド（より信頼性の高いURLに変更）
-const woodSound = new Audio('https://raw.githubusercontent.com/rafael-m-faria/posture-checker/master/public/sounds/wood-knock.mp3');
-woodSound.preload = 'auto';
+// 通知用サウンド（より確実に鳴るパブリックな音源）
+const woodSound = new Audio('https://raw.githubusercontent.com/the-maldridge/open-asset-library/master/audio/sfx/wood_knock.mp3');
+woodSound.load();
 
 const startBtn = document.getElementById("startBtn");
 const angleText = document.getElementById("angleText");
@@ -32,7 +32,7 @@ startBtn.addEventListener("click", () => {
     if (sensorStarted) {
         stopSensor();
     } else {
-        // 【重要】ボタンクリックと同時に音声を有効化
+        // iPhoneのブラウザ制限を解除するために音を一瞬鳴らす
         woodSound.play().then(() => {
             woodSound.pause();
             woodSound.currentTime = 0;
@@ -84,14 +84,14 @@ function handleOrientation(event) {
     let beta = event.beta;
     angleText.textContent = `${beta.toFixed(1)}°`;
 
-    // 90度（垂直）を基準にしたズレ
+    // 90度（垂直）を基準にしたズレを計算
     let diff = Math.abs(90 - beta);
 
     if (diff <= threshold) {
-        updateUI(true);
+        updateUI(true); // 良い姿勢
         manageAlert(false);
     } else {
-        updateUI(false);
+        updateUI(false); // 悪い姿勢 [cite: 1]
         manageAlert(true);
     }
     updateScore();
@@ -112,6 +112,7 @@ function manageAlert(isBad) {
         if (!badPostureStartTime) badPostureStartTime = Date.now();
         let duration = Date.now() - badPostureStartTime;
         
+        // 3秒継続で警告 
         if (duration >= 3000 && !vibrationInterval) {
             triggerAlert();
             vibrationInterval = setInterval(triggerAlert, 2000); 
@@ -124,16 +125,13 @@ function manageAlert(isBad) {
 }
 
 function triggerAlert() {
-    // 振動 (Androidのみ動作) 
+    // 振動 (Androidのみ対応。iPhoneは動作しません) 
     if (navigator.vibrate) {
-        navigator.vibrate(500);
+        navigator.vibrate(500); 
     }
     // 音声再生
     woodSound.currentTime = 0;
-    woodSound.play().catch(e => {
-        console.log("Play error:", e);
-        message.textContent = "音声再生に失敗しました";
-    });
+    woodSound.play().catch(e => console.log("Sound play error:", e));
 }
 
 function resetTimers() {
